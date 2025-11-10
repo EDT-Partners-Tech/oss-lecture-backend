@@ -1,3 +1,4 @@
+<!-- © [2025] EDT&Partners. Licensed under CC BY 4.0. -->
 # LTI 1.3 Integration and Deep Linking Documentation
 
 ## Overview

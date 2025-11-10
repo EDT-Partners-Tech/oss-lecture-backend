@@ -1,3 +1,4 @@
+<!-- © [2025] EDT&Partners. Licensed under CC BY 4.0. -->
 # Construcción de ARNs para Modelos de AWS Bedrock
 
 ## Descripción General

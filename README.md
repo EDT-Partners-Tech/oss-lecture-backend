@@ -1,3 +1,4 @@
+<!-- © [2025] EDT&Partners. Licensed under CC BY 4.0. -->
 # AI-Powered Lecture Management System Backend
 
 This project is a FastAPI-based backend for an AI-powered Lecture system, providing features for course management, exam generation, and content analysis.
