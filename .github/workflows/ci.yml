@@ -1,0 +1,148 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  setup:
+    name: Set up project
+    runs-on: ubuntu-latest
+    outputs:
+      python-version: 3.9
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Cache Poetry
+        uses: actions/cache@v3
+        with:
+          path: ~/.poetry
+          key: ${{ runner.os }}-poetry-install-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-install-
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+        env:
+          POETRY_HOME: ~/.poetry
+
+      - name: Add Poetry to PATH
+        run: echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+  unit_tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Cache Poetry
+        uses: actions/cache@v3
+        with:
+          path: ~/.poetry
+          key: ${{ runner.os }}-poetry-install-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-install-
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+        env:
+          POETRY_HOME: ~/.poetry
+
+      - name: Add Poetry to PATH
+        run: echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pypoetry
+            .venv
+          key: ${{ runner.os }}-poetry-deps-${{ hashFiles('pyproject.toml', 'poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-deps-
+
+      - name: Regenerate poetry.lock (if needed)
+        run: |
+          poetry lock
+        continue-on-error: true # This step is safe to fail, as it's just to ensure the lock file is regenerated if necessary
+
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create true
+          poetry install --no-interaction --no-ansi --no-root
+
+      - name: Run unit tests
+        run: |
+          poetry run pytest -v --durations=10
+
+  integration_tests:
+    name: Run Integration Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Cache Poetry
+        uses: actions/cache@v3
+        with:
+          path: ~/.poetry
+          key: ${{ runner.os }}-poetry-install-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-install-
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+        env:
+          POETRY_HOME: ~/.poetry
+
+      - name: Add Poetry to PATH
+        run: echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pypoetry
+            .venv
+          key: ${{ runner.os }}-poetry-deps-${{ hashFiles('pyproject.toml', 'poetry.lock') }}
+          restore-keys: ${{ runner.os }}-poetry-deps-
+
+      - name: Regenerate poetry.lock (if needed)
+        run: |
+          poetry lock
+        continue-on-error: true
+
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create true
+          poetry install --no-interaction --no-ansi --no-root
+
+      - name: Run integration tests
+        run: |
+          poetry run pytest -n auto -v -m integration --durations=10

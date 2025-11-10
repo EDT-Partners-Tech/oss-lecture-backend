@@ -1,0 +1,408 @@
+<!-- © [2025] EDT&Partners. Licensed under CC BY 4.0. -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Quiz Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .quiz-output {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            display: none;
+        }
+
+        .quiz-output.show {
+            display: block;
+        }
+
+        .quiz-question {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-question h3 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .quiz-options {
+            list-style: none;
+            padding: 0;
+        }
+
+        .quiz-options li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .quiz-options li:last-child {
+            border-bottom: none;
+        }
+
+        .quiz-options li.correct {
+            color: #059669;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>❓ AI Quiz Generator</h1>
+            <p>Generate intelligent quizzes from your content</p>
+        </div>
+
+        <div class="content">
+            <form id="quiz-form">
+                <div class="form-group">
+                    <label for="topic">Topic or Subject</label>
+                    <input type="text" id="topic" name="topic"
+                        placeholder="e.g., World War II, Python Programming, Cell Biology" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Content (Optional)</label>
+                    <textarea id="content" name="content"
+                        placeholder="Paste your lecture notes, textbook content, or any material you want to generate questions from..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="num_questions">Number of Questions</label>
+                    <select id="num_questions" name="num_questions">
+                        <option value="5">5 Questions</option>
+                        <option value="10" selected>10 Questions</option>
+                        <option value="15">15 Questions</option>
+                        <option value="20">20 Questions</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="difficulty">Difficulty Level</label>
+                    <select id="difficulty" name="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="question_type">Question Type</label>
+                    <select id="question_type" name="question_type">
+                        <option value="multiple_choice" selected>Multiple Choice</option>
+                        <option value="true_false">True/False</option>
+                        <option value="short_answer">Short Answer</option>
+                        <option value="mixed">Mixed Types</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn" id="generate-btn">
+                    Generate Quiz
+                </button>
+            </form>
+
+            <div class="quiz-output" id="quiz-output">
+                <h2>Generated Quiz</h2>
+                <div id="quiz-content"></div>
+                <button type="button" class="btn" onclick="downloadQuiz()">
+                    Download Quiz
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = window.location.origin;
+        const lti_session_token = '{{ lti_session_token }}';
+        let currentQuiz = null;
+
+        document.getElementById('quiz-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            await generateQuiz();
+        });
+
+        async function generateQuiz() {
+            const generateBtn = document.getElementById('generate-btn');
+            const quizOutput = document.getElementById('quiz-output');
+            const quizContent = document.getElementById('quiz-content');
+
+            // Disable button and show loading
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating Quiz...';
+            quizContent.innerHTML = '<div class="loading">Generating your quiz questions...</div>';
+            quizOutput.classList.add('show');
+
+            try {
+                // Get form data
+                const formData = new FormData(document.getElementById('quiz-form'));
+                const quizData = {
+                    topic: formData.get('topic'),
+                    content: formData.get('content') || '',
+                    num_questions: parseInt(formData.get('num_questions')),
+                    difficulty: formData.get('difficulty'),
+                    question_type: formData.get('question_type')
+                };
+
+                // Make API call to generate quiz
+                const response = await fetch(`${baseUrl}/quiz/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${lti_session_token}`,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(quizData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                currentQuiz = result;
+
+                // Display quiz
+                displayQuiz(result);
+
+            } catch (error) {
+                console.error('Error generating quiz:', error);
+                quizContent.innerHTML = `<div class="error">Failed to generate quiz: ${error.message}</div>`;
+            } finally {
+                // Re-enable button
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate Quiz';
+            }
+        }
+
+        function displayQuiz(quiz) {
+            const quizContent = document.getElementById('quiz-content');
+
+            if (!quiz.questions || quiz.questions.length === 0) {
+                quizContent.innerHTML = '<div class="error">No questions were generated. Please try again.</div>';
+                return;
+            }
+
+            let html = '';
+            quiz.questions.forEach((question, index) => {
+                html += `
+                    <div class="quiz-question">
+                        <h3>Question ${index + 1}</h3>
+                        <p><strong>${question.question}</strong></p>
+                `;
+
+                if (question.type === 'multiple_choice' && question.options) {
+                    html += '<ul class="quiz-options">';
+                    question.options.forEach((option, optIndex) => {
+                        const isCorrect = question.correct_answer === option || question.correct_answer === String.fromCharCode(65 + optIndex);
+                        html += `<li class="${isCorrect ? 'correct' : ''}">${String.fromCharCode(65 + optIndex)}. ${option}</li>`;
+                    });
+                    html += '</ul>';
+                } else if (question.type === 'true_false') {
+                    html += `<p><strong>Answer:</strong> <span class="correct">${question.correct_answer}</span></p>`;
+                } else if (question.type === 'short_answer') {
+                    html += `<p><strong>Expected Answer:</strong> <span class="correct">${question.correct_answer}</span></p>`;
+                }
+
+                if (question.explanation) {
+                    html += `<p><strong>Explanation:</strong> ${question.explanation}</p>`;
+                }
+
+                html += '</div>';
+            });
+
+            quizContent.innerHTML = html;
+        }
+
+        function downloadQuiz() {
+            if (!currentQuiz) return;
+
+            const content = formatQuizForDownload(currentQuiz);
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `quiz-${currentQuiz.topic || 'generated'}.gift`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function formatQuizForDownload(quiz) {
+            // Convert questions to GIFT format
+            const giftQuestions = quiz.questions.map((question, index) => {
+                let giftQuestion = `::Question ${index + 1}:: ${question.question} {`;
+
+                if (question.type === 'multiple_choice' && question.options) {
+                    giftQuestion += '\n';
+                    const options = question.options;
+                    const answers = options.map(option => {
+                        const isCorrect = question.correct_answer === option ||
+                            question.correct_answer === String.fromCharCode(65 + options.indexOf(option));
+                        return `${isCorrect ? '=' : '~'}${option}`;
+                    });
+                    giftQuestion += answers.join('\n') + '\n}';
+                } else if (question.type === 'true_false') {
+                    const correct = question.correct_answer.toString().toLowerCase() === 'true' ? 'T' : 'F';
+                    giftQuestion += `${correct}}`;
+                } else if (question.type === 'short_answer') {
+                    giftQuestion += '}';
+                }
+
+                return giftQuestion;
+            });
+
+            return giftQuestions.join('\n\n');
+        }
+    </script>
+</body>
+
+</html>

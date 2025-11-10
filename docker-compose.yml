@@ -1,0 +1,49 @@
+# © [2025] EDT&Partners. Licensed under CC BY 4.0.
+
+version: "3"
+networks:
+  my-network:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: lecture-postgres
+    environment:
+      - POSTGRES_DB=lecture_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  translation-api:
+    stdin_open: true
+    tty: true
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    command: python main.py
+    ports:
+      - "8000:8000"
+    networks:
+      - my-network
+    environment:
+      - AWS_DEFAULT_REGION=eu-central-1
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/lecture_db
+      # Add other environment variables that can't be stored in SSM here
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

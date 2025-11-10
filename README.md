@@ -540,4 +540,3 @@ item = result.scalar_one_or_none()
 if item:
     await db.delete(item)
 ```
-# oss-lecture-backend
