@@ -556,3 +556,8 @@ item = result.scalar_one_or_none()
 if item:
     await db.delete(item)
 ```
+
+### 📄 License Change (November 24, 2025)
+
+This project was originally released under the **CC BY 4.0** license.  
+As of **November 24, 2025**, all source code in this repository is licensed under the **Apache License 2.0**.
