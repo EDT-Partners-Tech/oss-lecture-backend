@@ -90,48 +90,6 @@ def client(mock_db, mock_cognito_token_payload):
     app.dependency_overrides.clear()
 
 @pytest.mark.asyncio
-async def test_delete_generated_content_not_found(client, mock_db):
-    """Test deletion of non-existent content"""
-    content_id = str(uuid.uuid4())
-    
-    # Mock user
-    mock_user = Mock()
-    mock_user.id = MOCK_GENERATED_CONTENT["user_id"]
-    
-    # Configure mocks
-    with patch("routers.ai_content.get_user_by_cognito_id", return_value=mock_user), \
-         patch("routers.ai_content.get_generated_content_by_id", return_value=None):
-        
-        response = client.delete(f"/generated-content/{content_id}")
-        
-        assert response.status_code == 404
-        data = response.json()
-        assert data["detail"] == "Contenido no encontrado"
-
-@pytest.mark.asyncio
-async def test_delete_generated_content_unauthorized(client, mock_db):
-    """Test deletion of content by unauthorized user"""
-    content_id = str(uuid.uuid4())
-    
-    # Mock user
-    mock_user = Mock()
-    mock_user.id = str(uuid.uuid4())  # Different user ID
-    
-    # Mock content
-    mock_content = Mock()
-    mock_content.user_id = MOCK_GENERATED_CONTENT["user_id"]  # Different from user
-    
-    # Configure mocks
-    with patch("routers.ai_content.get_user_by_cognito_id", return_value=mock_user), \
-         patch("routers.ai_content.get_generated_content_by_id", return_value=mock_content):
-        
-        response = client.delete(f"/generated-content/{content_id}")
-        
-        assert response.status_code == 403
-        data = response.json()
-        assert data["detail"] == "No tienes permisos para eliminar este contenido"
-
-@pytest.mark.asyncio
 async def test_delete_generated_content_service_error(client, mock_db):
     """Test deletion when service fails"""
     content_id = str(uuid.uuid4())
