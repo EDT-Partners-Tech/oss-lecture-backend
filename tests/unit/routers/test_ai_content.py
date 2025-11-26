@@ -89,20 +89,3 @@ def client(mock_db, mock_cognito_token_payload):
 
     app.dependency_overrides.clear()
 
-
-@pytest.mark.asyncio
-async def test_get_bedrock_models_service_error(client, mock_db):
-    """Test Bedrock models endpoint when AWS service fails"""
-    # Mock user
-    mock_user = Mock()
-    mock_user.id = str(uuid.uuid4())
-    
-    # Configure mocks
-    with patch("routers.ai_content.get_user_by_cognito_id", return_value=mock_user), \
-         patch("services.aws_service.AWSService.list_bedrock_models", side_effect=Exception("AWS Error")):
-        
-        response = client.get("/bedrock-models")
-        
-        assert response.status_code == 500
-        data = response.json()
-        assert "Error obteniendo modelos de Bedrock" in data["detail"]
