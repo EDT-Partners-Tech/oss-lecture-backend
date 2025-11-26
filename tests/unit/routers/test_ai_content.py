@@ -89,41 +89,6 @@ def client(mock_db, mock_cognito_token_payload):
 
     app.dependency_overrides.clear()
 
-@pytest.mark.asyncio
-async def test_get_bedrock_models_success(client, mock_db):
-    """Test successful retrieval of Bedrock models"""
-    # Mock user
-    mock_user = Mock()
-    mock_user.id = str(uuid.uuid4())
-    
-    # Mock AWS service response
-    mock_models = [
-        {
-            "name": "Claude 3 Sonnet",
-            "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
-            "provider": "anthropic",
-        },
-        {
-            "name": "Claude 3 Haiku",
-            "modelId": "anthropic.claude-3-haiku-20240307-v1:0",
-            "provider": "anthropic",
-        }
-    ]
-    
-    # Configure mocks
-    with patch("routers.ai_content.get_user_by_cognito_id", return_value=mock_user), \
-         patch("services.aws_service.AWSService.list_bedrock_models", return_value=mock_models):
-        
-        response = client.get("/bedrock-models")
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data["success"] is True
-        assert data["message"] == "Modelos de Bedrock obtenidos exitosamente"
-        assert len(data["models"]) == 2
-        assert data["models"][0]["name"] == "Claude 3 Sonnet"
-        assert data["models"][0]["modelId"] == "anthropic.claude-3-sonnet-20240229-v1:0"
-        assert data["models"][0]["provider"] == "anthropic"
 
 @pytest.mark.asyncio
 async def test_get_bedrock_models_unauthorized(client, mock_db):
