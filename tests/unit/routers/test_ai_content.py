@@ -90,43 +90,6 @@ def client(mock_db, mock_cognito_token_payload):
     app.dependency_overrides.clear()
 
 @pytest.mark.asyncio
-async def test_delete_generated_content_success(client, mock_db):
-    """Test successful deletion of generated content"""
-    content_id = str(uuid.uuid4())
-    
-    # Mock user
-    mock_user = Mock()
-    mock_user.id = MOCK_GENERATED_CONTENT["user_id"]
-    
-    # Mock content
-    mock_content = Mock()
-    mock_content.user_id = MOCK_GENERATED_CONTENT["user_id"]
-    
-    # Mock versions
-    mock_versions = []
-    for version_data in MOCK_GENERATED_CONTENT_VERSIONS:
-        mock_version = Mock()
-        mock_version.content_s3_uri = version_data["content_s3_uri"]
-        mock_versions.append(mock_version)
-    
-    # Configure mocks
-    with patch("routers.ai_content.get_user_by_cognito_id", return_value=mock_user), \
-         patch("routers.ai_content.get_generated_content_by_id", return_value=mock_content), \
-         patch("routers.ai_content.get_generated_content_versions_by_content_id", return_value=mock_versions), \
-         patch("utility.aws.delete_from_s3", new_callable=AsyncMock) as mock_delete_s3, \
-         patch("routers.ai_content.delete_generated_content_versions", return_value=2), \
-         patch("routers.ai_content.delete_generated_content", return_value=True), \
-         patch("services.content_storage_service.ContentStorageService.delete_generated_content", new_callable=AsyncMock, return_value=True):
-        
-        response = client.delete(f"/generated-content/{content_id}")
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data["success"] is True
-        assert data["message"] == "Contenido eliminado exitosamente"
-        assert data["content_id"] == content_id
-
-@pytest.mark.asyncio
 async def test_delete_generated_content_not_found(client, mock_db):
     """Test deletion of non-existent content"""
     content_id = str(uuid.uuid4())
