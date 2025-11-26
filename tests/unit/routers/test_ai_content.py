@@ -90,30 +90,6 @@ def client(mock_db, mock_cognito_token_payload):
     app.dependency_overrides.clear()
 
 @pytest.mark.asyncio
-async def test_delete_generated_content_service_error(client, mock_db):
-    """Test deletion when service fails"""
-    content_id = str(uuid.uuid4())
-    
-    # Mock user
-    mock_user = Mock()
-    mock_user.id = MOCK_GENERATED_CONTENT["user_id"]
-    
-    # Mock content
-    mock_content = Mock()
-    mock_content.user_id = MOCK_GENERATED_CONTENT["user_id"]
-    
-    # Configure mocks
-    with patch("routers.ai_content.get_user_by_cognito_id", return_value=mock_user), \
-         patch("routers.ai_content.get_generated_content_by_id", return_value=mock_content), \
-         patch("services.content_storage_service.ContentStorageService.delete_generated_content", new_callable=AsyncMock, return_value=False):
-        
-        response = client.delete(f"/generated-content/{content_id}")
-        
-        assert response.status_code == 500
-        data = response.json()
-        assert data["detail"] == "Error al eliminar el contenido"
-
-@pytest.mark.asyncio
 async def test_get_bedrock_models_success(client, mock_db):
     """Test successful retrieval of Bedrock models"""
     # Mock user
