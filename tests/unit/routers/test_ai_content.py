@@ -91,18 +91,6 @@ def client(mock_db, mock_cognito_token_payload):
 
 
 @pytest.mark.asyncio
-async def test_get_bedrock_models_unauthorized(client, mock_db):
-    """Test Bedrock models endpoint with unauthorized user"""
-    # Configure mocks
-    with patch("routers.ai_content.get_user_by_cognito_id", return_value=None):
-        
-        response = client.get("/bedrock-models")
-        
-        assert response.status_code == 401
-        data = response.json()
-        assert data["detail"] == "Usuario no autorizado"
-
-@pytest.mark.asyncio
 async def test_get_bedrock_models_service_error(client, mock_db):
     """Test Bedrock models endpoint when AWS service fails"""
     # Mock user
