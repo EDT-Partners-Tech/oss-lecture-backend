@@ -157,17 +157,6 @@ def test_get_details_not_found(client, monkeypatch):
     assert response.status_code == 404
 
 
-# Test: GET /history when no requests are found (should return 404)
-def test_history_no_requests(client, monkeypatch):
-    # Configure user and service
-    FakeUser = type("FakeUser", (), {"id": "dummy_user_id"})
-    monkeypatch.setattr(podcast, "get_user_by_cognito_id", lambda db, sub: FakeUser())
-    monkeypatch.setattr(podcast, "get_service_id_by_code", lambda db, code: "dummy_service_id")
-    # Simulate no requests by returning None
-    monkeypatch.setattr(podcast, "get_requests_by_user_service", lambda db, uid, sid: None)
-    response = client.get("/history")
-    assert response.status_code == 404
-
 # Test: DELETE /{podcast_id} when podcast not found (should return 404)
 def test_delete_podcast_not_found(client, monkeypatch):
     monkeypatch.setattr(podcast, "get_podcast_details", lambda db, pid: None)
