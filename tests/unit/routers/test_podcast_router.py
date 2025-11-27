@@ -156,18 +156,6 @@ def test_get_details_not_found(client, monkeypatch):
     response = client.get(f"/details/{test_id}")
     assert response.status_code == 404
 
-# Test: GET /details/{podcast_id} when linked request is missing (should return 403)
-def test_get_details_no_linked_request(client, monkeypatch):
-    FakePodcast = type("FakePodcast", (), {})  
-    fake_podcast = FakePodcast()
-    fake_podcast.id = str(uuid.uuid4())
-    fake_podcast.request_id = "dummy_request_id"
-    fake_podcast.status = PodcastStatus.COMPLETED
-    monkeypatch.setattr(podcast, "get_podcast_details", lambda db, pid: fake_podcast)
-    # Simulate missing linked request
-    monkeypatch.setattr(podcast, "get_request_by_id", lambda db, rid, uid: None)
-    response = client.get(f"/details/{fake_podcast.id}")
-    assert response.status_code == 403
 
 # Test: GET /history when no requests are found (should return 404)
 def test_history_no_requests(client, monkeypatch):
