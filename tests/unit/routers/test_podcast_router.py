@@ -127,37 +127,6 @@ def test_get_podcast_details(client, monkeypatch):
     assert data["imageUrl"] == "https://fakeurl/dummy_image"
     assert data["dialog"] == ["line 1", "line 2"]
 
-# --- Test: GET /history ---
-def test_podcast_history(client, monkeypatch):
-    # Fake request and podcast objects.
-    FakeRequest = type("FakeRequest", (), {"id": "dummy_request_id"})
-    monkeypatch.setattr(podcast, "get_requests_by_user_service", lambda db, uid, sid: [FakeRequest()])
-    
-    FakePodcast = type("FakePodcast", (), {}) 
-    fake_podcast = FakePodcast()
-    fake_podcast.id = "dummy_podcast_id"
-    fake_podcast.title = "History Podcast"
-    fake_podcast.audio_s3_uri = "audio_history"
-    fake_podcast.image_s3_uri = "image_history"
-    fake_podcast.completed_at = datetime(2023, 10, 10)
-    fake_podcast.status = PodcastStatus.COMPLETED
-    monkeypatch.setattr(podcast, "find_podcast_by_request_id", lambda db, rid: fake_podcast)
-    # Override get_user_by_cognito_id and presigned URL generator.
-    FakeUser = type("FakeUser", (), {"id": "dummy_user_id"})
-    monkeypatch.setattr(podcast, "get_user_by_cognito_id", lambda db, sub: FakeUser())
-    monkeypatch.setattr(podcast, "get_service_id_by_code", lambda db, code: "dummy_service_id")
-    monkeypatch.setattr(podcast, "generate_presigned_url", lambda bucket, key: f"https://fakeurl/{key}")
-    
-    response = client.get("/history")
-    assert response.status_code == 200
-    data = response.json()
-    assert "data" in data
-    assert len(data["data"]) >= 1
-    item = data["data"][0]
-    assert item["id"] == "dummy_podcast_id"
-    assert item["title"] == "History Podcast"
-    assert item["audioUrl"] == "https://fakeurl/audio_history"
-    assert item["imageUrl"] == "https://fakeurl/image_history"
 
 # --- Test: GET /history with multiple podcasts ---
 def test_podcast_history_multiple(client, monkeypatch):
