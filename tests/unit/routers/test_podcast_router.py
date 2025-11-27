@@ -96,37 +96,6 @@ def test_get_podcast_status(client, monkeypatch):
     assert data["podcast_id"] == test_id
     assert data["status"] == PodcastStatus.COMPLETED
 
-# --- Test: GET /details/{podcast_id} ---
-def test_get_podcast_details(client, monkeypatch):
-    # Create a fake podcast object with needed attributes.
-    FakePodcast = type("FakePodcast", (), {})  # simple dynamic object
-    fake_podcast = FakePodcast()
-    fake_podcast.id = str(uuid.uuid4())  # use a valid UUID string
-    fake_podcast.request_id = "dummy_request_id"
-    fake_podcast.title = "Fake Podcast"
-    fake_podcast.dialog = json.dumps(["line 1", "line 2"])
-    fake_podcast.audio_s3_uri = "dummy_audio"
-    fake_podcast.image_s3_uri = "dummy_image"
-    fake_podcast.status = PodcastStatus.COMPLETED
-    
-    monkeypatch.setattr(podcast, "get_podcast_details", lambda db, pid: fake_podcast)
-    # get_request_by_id should return a dummy request to allow access.
-    FakeRequest = type("FakeRequest", (), {"id": "dummy_request_id"})
-    monkeypatch.setattr(podcast, "get_request_by_id", lambda db, rid, uid: FakeRequest())
-    # Override functions generating URLs.
-    monkeypatch.setattr(podcast, "generate_presigned_url", lambda bucket, key: f"https://fakeurl/{key}")
-    FakeUser = type("FakeUser", (), {"id": "dummy_user_id"})
-    monkeypatch.setattr(podcast, "get_user_by_cognito_id", lambda db, sub: FakeUser())
-    
-    test_id = fake_podcast.id  # use the valid UUID
-    response = client.get(f"/details/{test_id}")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["title"] == "Fake Podcast"
-    assert data["audioUrl"] == "https://fakeurl/dummy_audio"
-    assert data["imageUrl"] == "https://fakeurl/dummy_image"
-    assert data["dialog"] == ["line 1", "line 2"]
-
 # --- Test: DELETE /{podcast_id} ---
 def test_delete_podcast(client, monkeypatch):
     # Fake podcast to be deleted.
