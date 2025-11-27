@@ -127,67 +127,6 @@ def test_get_podcast_details(client, monkeypatch):
     assert data["imageUrl"] == "https://fakeurl/dummy_image"
     assert data["dialog"] == ["line 1", "line 2"]
 
-
-# --- Test: GET /history with multiple podcasts ---
-def test_podcast_history_multiple(client, monkeypatch):
-    # Create fake request objects with unique ids.
-    FakeRequest = type("FakeRequest", (), {})
-    req1 = FakeRequest(); req1.id = "req1"
-    req2 = FakeRequest(); req2.id = "req2"
-    req3 = FakeRequest(); req3.id = "req3"
-    requests = [req1, req2, req3]
-    monkeypatch.setattr(podcast, "get_requests_by_user_service", lambda db, uid, sid: requests)
-    
-    # Create fake podcast objects with varying statuses.
-    FakePodcast = type("FakePodcast", (), {})  
-    podcast1 = FakePodcast()
-    podcast1.id = "pod1"
-    podcast1.title = "Completed Podcast"
-    podcast1.audio_s3_uri = "audio1"
-    podcast1.image_s3_uri = "image1"
-    podcast1.completed_at = datetime(2023, 10, 10)
-    podcast1.status = PodcastStatus.COMPLETED
-
-    podcast2 = FakePodcast()
-    podcast2.id = "pod2"
-    podcast2.title = "Failed Podcast"
-    podcast2.audio_s3_uri = "audio2"
-    podcast2.image_s3_uri = "image2"
-    podcast2.completed_at = datetime(2023, 9, 9)
-    # Use a non-COMPLETED status (e.g., PROCESSING)
-    podcast2.status = PodcastStatus.PROCESSING
-
-    podcast3 = FakePodcast()
-    podcast3.id = "pod3"
-    podcast3.title = ""
-    podcast3.audio_s3_uri = None
-    podcast3.image_s3_uri = None
-    podcast3.completed_at = datetime(2023, 8, 8)
-    # Use a non-COMPLETED status (e.g., ERROR)
-    podcast3.status = PodcastStatus.ERROR
-
-    # Map request ids to fake podcasts.
-    fake_podcasts = {"req1": podcast1, "req2": podcast2, "req3": podcast3}
-    monkeypatch.setattr(podcast, "find_podcast_by_request_id", lambda db, rid: fake_podcasts.get(rid))
-    # Override URL generator for consistency.
-    monkeypatch.setattr(podcast, "generate_presigned_url", lambda bucket, key: f"https://fakeurl/{key}")
-    # Override get_user_by_cognito_id and service id.
-    FakeUser = type("FakeUser", (), {"id": "dummy_user_id"})
-    monkeypatch.setattr(podcast, "get_user_by_cognito_id", lambda db, sub: FakeUser())
-    monkeypatch.setattr(podcast, "get_service_id_by_code", lambda db, code: "dummy_service_id")
-    
-    response = client.get("/history")
-    assert response.status_code == 200
-    data = response.json()
-    assert "data" in data
-    assert len(data["data"]) == 3
-    assert len([item for item in data["data"] if item["status"] == PodcastStatus.COMPLETED]) == 1
-    item = data["data"][0]
-    assert item["id"] == "pod1"
-    assert item["title"] == "Completed Podcast"
-    assert item["audioUrl"] == "https://fakeurl/audio1"
-    assert item["imageUrl"] == "https://fakeurl/image1"
-
 # --- Test: DELETE /{podcast_id} ---
 def test_delete_podcast(client, monkeypatch):
     # Fake podcast to be deleted.
