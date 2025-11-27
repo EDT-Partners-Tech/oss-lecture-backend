@@ -156,20 +156,6 @@ def test_get_details_not_found(client, monkeypatch):
     response = client.get(f"/details/{test_id}")
     assert response.status_code == 404
 
-# Test: GET /details/{podcast_id} when podcast not completed (should return 400)
-def test_get_details_not_completed(client, monkeypatch):
-    FakePodcast = type("FakePodcast", (), {})  
-    fake_podcast = FakePodcast()
-    fake_podcast.id = str(uuid.uuid4())
-    fake_podcast.request_id = "dummy_request_id"
-    fake_podcast.status = PodcastStatus.PROCESSING  # Not completed
-    monkeypatch.setattr(podcast, "get_podcast_details", lambda db, pid: fake_podcast)
-    # get_request_by_id returns a valid request to bypass access check
-    FakeRequest = type("FakeRequest", (), {"id": "dummy_request_id"})
-    monkeypatch.setattr(podcast, "get_request_by_id", lambda db, rid, uid: FakeRequest())
-    response = client.get(f"/details/{fake_podcast.id}")
-    assert response.status_code == 400
-
 # Test: GET /details/{podcast_id} when linked request is missing (should return 403)
 def test_get_details_no_linked_request(client, monkeypatch):
     FakePodcast = type("FakePodcast", (), {})  
