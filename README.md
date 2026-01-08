@@ -370,8 +370,8 @@ def your_endpoint(
 Prerequisites:
 
 - AWS account with ECR repository
-- EC2 instance with Docker installed
-- IAM role with necessary permissions attached to the EC2 instance
+- ECS cluster configured
+- IAM role with necessary permissions attached to the ECS cluster
 
 Deployment steps:
 
@@ -383,21 +383,12 @@ Deployment steps:
    docker push <ecr_repository_uri>
    ```
 
-2. SSH into the EC2 instance and pull the latest image:
+2. In the ECS Cluster pull the latest image from the ECR repository by creating a new task:
 
-   ```
-   docker pull <ecr_repository_uri>:latest
-   ```
+    - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/standalone-task-create.html
+    - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/create-task-definition.html
 
-3. Stop the existing container and start a new one with the updated image:
-
-   ```
-   docker stop edt-ai-translator
-   docker rm edt-ai-translator
-   docker run -d --name edt-ai-translator -p 8000:8000 --env-file /path/to/.env -v /data/translator:/app/data <ecr_repository_uri>:latest
-   ```
-
-4. Run database migrations:
+3. Run database migrations:
    ```
    docker exec edt-ai-translator alembic upgrade head
    ```
@@ -408,16 +399,16 @@ The lecture-backend relies on the following AWS infrastructure:
 
 - ECR (Elastic Container Registry):
 
-  - Repository: `444208416329.dkr.ecr.eu-central-1.amazonaws.com/edt-ai-translator`
+  - Repository: `123456789012.dkr.ecr.eu-central-1.amazonaws.com/edt-ai-translator`
 
-- EC2:
+- ECS:
 
-  - Instance ID: `i-0a569c1a4a95752b5`
+  - Cluster ID: `Lecture-Cluster`
   - Purpose: Hosts the Docker container running the application
 
 - RDS (Relational Database Service):
 
-  - Endpoint: `lecture.cvcvaal1vwd4.eu-central-1.rds.amazonaws.com`
+  - Endpoint: `lecture.xxxxxxxxxxxx.eu-central-1.rds.amazonaws.com`
   - Database: `lecture_core`
 
 - S3:
@@ -427,14 +418,14 @@ The lecture-backend relies on the following AWS infrastructure:
 
 - Cognito:
 
-  - User Pool ID: `eu-central-1_4jrcqhf3g`
+  - User Pool ID: `eu-central-1_xxxxxxxxx`
   - App Client ID: `XXXXXXXXXXXXXXXXXXXXXXXXX`
 
 - IAM:
   - User: `XXXXXXXXXXXXXXXXXXXX`
   - Purpose: Provides necessary permissions for AWS service interactions
 
-The infrastructure is managed through a combination of manual setup and AWS CodePipeline for continuous deployment.
+The infrastructure is managed through Terraform IaC code. (https://github.com/EDT-Partners-Tech/oss-lecture-infrastructure)
 
 ## Async Database Operations Guide
 
