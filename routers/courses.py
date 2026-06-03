@@ -18,9 +18,10 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 import os
 import shutil
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 import uuid
+import json
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status, Form, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from requests import Session
@@ -991,9 +992,10 @@ async def get_course_data(
 
 @router.post("/generate-course/", status_code=status.HTTP_202_ACCEPTED)
 async def generate_course(
-    course_id: UUID,
     extra_processing: bool = Form(...),
     files: List[UploadFile] = File(...),
+    title: str = Form(...),
+    settings: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     token: JWTLectureTokenPayload = Depends(require_token_types(allowed_types=["cognito"]))
 ):
@@ -1006,17 +1008,27 @@ async def generate_course(
     4. Ingestion of data
     5. Analysis of the knowledge base
     """
-    course = get_course(db, course_id)
-    if not course:
-        raise HTTPException(status_code=404, detail=COURSE_NOT_FOUND_MESSAGE)
-
     user_id = token.sub
     teacher = get_user_by_cognito_id(db, user_id)
     if not teacher:
         raise HTTPException(status_code=404, detail=TEACHER_NOT_FOUND_MESSAGE)
 
-    if teacher.role not in [UserRole.teacher, UserRole.admin] or course.teacher_id != teacher.id:
+    if teacher.role not in [UserRole.teacher, UserRole.admin]:
         raise HTTPException(status_code=403, detail="Not authorized to generate course")
+
+    # Create the course server-side from the submitted title/settings. The client no
+    # longer pre-creates a course and passes a course_id (matches lecture-backend).
+    settings = json.loads(settings) if settings else {}
+    course_id = uuid.uuid4()
+    course = Course(
+        id=course_id,
+        title=title,
+        description=None,
+        teacher_id=teacher.id,
+        settings=settings if settings else None
+    )
+    db.add(course)
+    db.commit()
 
     # Get the information of the group and region before starting the async process
     user_group = teacher.group
@@ -1129,10 +1141,17 @@ async def process_course_generation(
             priority="normal"
         )
 
+        # The CreateKnowledgeBaseInfrastructure state machine requires a chunking_config
+        # field in its input (the CreateBedrockKnowledgeBase state reads $.chunking_config).
+        # Default to {} when the client didn't specify one, matching lecture-backend.
+        chunking_config = {}
+        if isinstance(course.settings, dict):
+            chunking_config = course.settings.get("chunking_config", {}) or {}
         input_data = {
             "course_id": str(course_id),
             "region_name": region_name,
-            "region_bucket": region_bucket
+            "region_bucket": region_bucket,
+            "chunking_config": chunking_config
         }
         response = start_step_function(input_data)
         execution_arn = response.get("executionArn")

@@ -17,7 +17,7 @@
 """Add table for service tokens
 
 Revision ID: d9be6249c441
-Revises: 23817afa2d84
+Revises: 9997efa37f8a
 Create Date: 2025-08-04 12:48:11.928194
 
 """
@@ -29,7 +29,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = 'd9be6249c441'
-down_revision: Union[str, None] = '23817afa2d84'
+down_revision: Union[str, None] = '9997efa37f8a'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

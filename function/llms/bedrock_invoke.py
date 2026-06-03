@@ -181,12 +181,16 @@ def invoke_bedrock_claude(prompt: str, model_id=None):
     system_prompt = "You are an AI assistant focused on clarity, accuracy, and helpfulness."
     max_tokens = model.max_input_tokens if hasattr(model, 'max_input_tokens') else 4096
     
+    # max_tokens in the Claude body is the OUTPUT limit; clamp to the model's output cap
+    # (max_tokens above is the INPUT window, used only for the length guardrail below).
+    max_output_tokens = min(getattr(model, 'max_output_tokens', 8000) or 8000, 8000)
+
     # Guardrail against input tokens overflow
     _check_prompt_length(model_id, prompt, max_tokens)
 
     body = json.dumps({
         "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": max_tokens,
+        "max_tokens": max_output_tokens,
         "system": system_prompt,
         "messages": [{"role": "user", "content": prompt}],
     })
@@ -234,9 +238,11 @@ def invoke_bedrock_nova(prompt: str, model_id=None):
     body = json.dumps({"schemaVersion": "messages-v1", "messages": messages, "system": system_prompt})
 
     model = get_model_by_id(model_id)
-    max_tokens = model.max_input_tokens if hasattr(model, 'max_input_tokens') else 4096
+    # Output cap (clamped). NOTE: the Nova body above does not currently send a
+    # max-tokens field, so this is informational only — kept correct for consistency.
+    max_output_tokens = min(getattr(model, 'max_output_tokens', 8000) or 8000, 8000)
 
-    # _check_prompt_length(model_id, prompt, max_tokens)
+    # _check_prompt_length(model_id, prompt, max_output_tokens)
 
     if is_inference_model(model_id):
         model_arn = f"arn:aws:bedrock:{region}:{account_id}:inference-profile/{suffix}.{model_id}"
@@ -281,9 +287,12 @@ def invoke_bedrock_meta(prompt: str, model_id=None, temperature=0.7):
         <|start_header_id|>assistant<|end_header_id|>
     """
 
+    # max_gen_len is the OUTPUT length; clamp to the model's output cap rather than the
+    # input window (max_tokens above is the input window, used for the length guardrail).
+    max_output_tokens = min(getattr(model, 'max_output_tokens', 8000) or 8000, 8000)
     body = json.dumps({
         "prompt": formatted_prompt,
-        "max_gen_len": max_tokens,
+        "max_gen_len": max_output_tokens,
         "temperature": temperature,
     })
 
@@ -421,9 +430,11 @@ def retrieve_and_generate(prompt: str, kb_id: str, session_id: str = "", model_i
     citations = response.get("citations", [])
     contexts = [
         {
-            "text": ref["content"]["text"],
-            "document_name": ref["metadata"].get("x-amz-bedrock-kb-source-uri", ""),
-            "page_number": ref["metadata"].get("x-amz-bedrock-kb-document-page-number", ""),
+            # Use .get() — a retrieved reference's content may be byteContent (no "text"
+            # key) rather than plain text, which would otherwise raise KeyError.
+            "text": ref.get("content", {}).get("text", ""),
+            "document_name": ref.get("metadata", {}).get("x-amz-bedrock-kb-source-uri", ""),
+            "page_number": ref.get("metadata", {}).get("x-amz-bedrock-kb-document-page-number", ""),
         }
         for citation in citations
         for ref in citation.get("retrievedReferences", [])
