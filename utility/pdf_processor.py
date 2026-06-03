@@ -433,6 +433,10 @@ class PDFDocumentProcessor:
             
             file_temporary_path = f"{self.material_uuid}.md"
             file_temporary_path_metadata = f"{file_temporary_path}.metadata.json"
+            # The Bedrock KB metadata sidecar is optional: only write/upload/remove it
+            # when there are metadata attributes (otherwise the file is never created and
+            # the unconditional upload/remove below would raise FileNotFoundError).
+            s3_uri_metadata = None
             if metadata:
                 metadata_content = json.dumps({
                     "metadataAttributes": metadata
@@ -441,14 +445,16 @@ class PDFDocumentProcessor:
                     f.write(metadata_content)
             with open(file_temporary_path, "w", encoding='utf-8') as f:
                 f.write(json.dumps(self.data["markdown_content"], ensure_ascii=False))
-            
+
             # Upload both files to S3
             s3_uri = await upload_file_to_s3('content', file_temporary_path, f"{s3_path}/{file_temporary_path}")
-            s3_uri_metadata = await upload_file_to_s3('content', file_temporary_path_metadata, f"{s3_path}/{file_temporary_path_metadata}")
-            
+            if metadata:
+                s3_uri_metadata = await upload_file_to_s3('content', file_temporary_path_metadata, f"{s3_path}/{file_temporary_path_metadata}")
+
             # Clean temporary file
             os.remove(file_temporary_path)
-            os.remove(file_temporary_path_metadata)
+            if metadata:
+                os.remove(file_temporary_path_metadata)
             
             return {
                 "status": "success",

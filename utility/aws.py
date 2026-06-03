@@ -292,7 +292,7 @@ def send_invite_email(email: str, invite_url: str, course_name: str) -> None:
 @RetryWithExponentialBackoff(max_retries=5, initial_delay=1, max_delay=32)
 async def generate_course_summary(db: Session, course_id: str, knowledge_base_id: str):
     try:
-        model_id='anthropic.claude-3-7-sonnet-20250219-v1:0'
+        model_id='anthropic.claude-sonnet-4-5-20250929-v1:0'
         prompt="""Human: You are a teacher writing a course description, and output it between the <summary_output> tags.
         
         Based on the search results provided, generate a concise summary of the course materials based on the following instructions:
@@ -350,7 +350,7 @@ async def generate_course_summary(db: Session, course_id: str, knowledge_base_id
 @RetryWithExponentialBackoff(max_retries=5, initial_delay=1, max_delay=32)
 async def generate_course_questions(db: Session, course_id: str, knowledge_base_id: str):
     try:
-        model_id='anthropic.claude-3-7-sonnet-20250219-v1:0'
+        model_id='anthropic.claude-sonnet-4-5-20250929-v1:0'
         prompt = """Human: You are a teacher writing questions for a course, and output them between the <questions_output> tags.
         
         Based on the search results provided, generate 5 questions based on the following instructions:

@@ -241,7 +241,7 @@ class TestInvokeBedrockClaude:
             'modelId': f"arn:aws:bedrock:us-east-1::foundation-model/{model_id}",
             'body': json.dumps({
                 "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 4096,
+                "max_tokens": 8000,
                 "system": "You are an AI assistant focused on clarity, accuracy, and helpfulness.",
                 "messages": [{"role": "user", "content": "What is the capital of France?"}]
             })
@@ -264,7 +264,7 @@ class TestInvokeBedrockClaude:
             'modelId': f"arn:aws:bedrock:us-east-1::foundation-model/{model_id}",
             'body': json.dumps({
                 "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 4096,
+                "max_tokens": 8000,
                 "system": "You are an AI assistant focused on clarity, accuracy, and helpfulness.",
                 "messages": [{"role": "user", "content": "What is the capital of France?"}]
             })
@@ -290,7 +290,7 @@ class TestInvokeBedrockClaude:
             'modelId': f"arn:aws:bedrock:us-east-1::foundation-model/{model_id}",
             'body': json.dumps({
                 "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 4096,
+                "max_tokens": 8000,
                 "system": "You are an AI assistant focused on clarity, accuracy, and helpfulness.",
                 "messages": [{"role": "user", "content": "Test prompt"}]
             })
@@ -421,7 +421,7 @@ class TestInvokeBedrockMeta:
         <|eot_id|>
         <|start_header_id|>assistant<|end_header_id|>
     """,
-                "max_gen_len": 4096,
+                "max_gen_len": 8000,
                 "temperature": 0.7
             })
         }
@@ -457,7 +457,7 @@ class TestInvokeBedrockMeta:
         <|eot_id|>
         <|start_header_id|>assistant<|end_header_id|>
     """,
-                "max_gen_len": 4096,
+                "max_gen_len": 8000,
                 "temperature": 0.7
             })
         }

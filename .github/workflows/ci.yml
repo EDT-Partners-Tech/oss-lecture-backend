@@ -12,7 +12,7 @@ jobs:
     name: Set up project
     runs-on: ubuntu-latest
     outputs:
-      python-version: 3.9
+      python-version: "3.11"
 
     steps:
       - name: Checkout code
@@ -22,7 +22,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: Cache Poetry
         uses: actions/cache@v3
@@ -52,7 +52,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: Cache Poetry
         uses: actions/cache@v3
@@ -106,7 +106,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: Cache Poetry
         uses: actions/cache@v3
